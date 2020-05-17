@@ -1,40 +1,54 @@
 import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
-import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTable } from '@angular/material/table';
-import { TableClientDataSource, TableClientItem } from './table-client-datasource';
 import { ClientServiceService } from '../client-service.service';
-import { HttpClient } from '@angular/common/http';
+import { TableClientDataSource,  } from './table-client-datasource';
+import { ClientSearchPageableDto } from '../models/ClientSearchPageable';
+import { MatPaginator } from '@angular/material/paginator';
 
 @Component({
   selector: 'app-table-client',
   templateUrl: './table-client.component.html',
   styleUrls: ['./table-client.component.css']
 })
-export class TableClientComponent implements AfterViewInit, OnInit {
-  @ViewChild(MatPaginator, {static: false}) paginator: MatPaginator;
-  @ViewChild(MatSort, {static: false}) sort: MatSort;
-  @ViewChild(MatTable, {static: false}) table: MatTable<TableClientItem>;
+export class TableClientComponent implements  OnInit {
+
+  @ViewChild(MatTable, { static: false }) table: MatTable<any>;
   dataSource: TableClientDataSource;
+   searchRequestPageable: ClientSearchPageableDto = new ClientSearchPageableDto();
 
   /** Columns displayed in the table. Columns IDs can be added, removed, or reordered. */
-  displayedColumns = ['id', 'nom','prenom'];
-  constructor(private clientServiceService: ClientServiceService ) {}
+  displayedColumns = ['id', 'nom', 'prenom'];
+  constructor(private clientServiceService: ClientServiceService) { }
   ngOnInit() {
-    //this.clientServiceService.getClient().subscribe((data:any)=>{console.log(data)});
-
-    this.clientServiceService.getClient().subscribe((data:any)=> {
-      console.log(data)
-      this.dataSource = new TableClientDataSource(data);
-      this.dataSource.sort = this.sort;
-      this.dataSource.paginator = this.paginator;
-      this.table.dataSource = this.dataSource;
-})
- 
-    
+    this.loadData();
   }
 
-  ngAfterViewInit() {
+  loadData() {
+
+    this.clientServiceService.search(this.searchRequestPageable).subscribe((data: any) => {
+      this.dataSource = new TableClientDataSource(data);
+      this.table.dataSource = this.dataSource;
+    })
+  }
+
+  sortChange($event: MatSort) {
+    this.searchRequestPageable.sortedBy = ($event.active)? $event.active : "nom";
+    this.searchRequestPageable.orderBy = ($event.direction )  ? $event.direction.toUpperCase() :"ASC"; 
+    this.reloadData(this.searchRequestPageable)
+  }
+  pageChange($event:MatPaginator){;
+    this.searchRequestPageable.page = $event.pageIndex;
+    this.searchRequestPageable.size = $event.pageSize;
+    this.reloadData(this.searchRequestPageable)
   
   }
+
+  reloadData(searchRequestPageable){
+    this.clientServiceService.search(searchRequestPageable).subscribe((data: any) => {
+      this.dataSource.updateTable(data);
+    })
+  }
+
+
 }
