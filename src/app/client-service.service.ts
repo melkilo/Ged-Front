@@ -1,15 +1,24 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 @Injectable({
   providedIn: 'root'
 })
 export class ClientServiceService {
 
-  constructor(private http: HttpClient ) {}
+  constructor(private http: HttpClient) { }
 
- // let ur="http://localhost:8080/api/ged/getAllClients";
+  baseUrl = "http://localhost:8080/api/ged/"
 
-public getClient(){return this.http.get<any>("http://localhost:8080/api/ged/getAllClients")}
+  SEARCH = "search";
+
+  public getClient() {
+
+    return this.http.get<any>(this.baseUrl + "getAll/")
+  }
+
+  public search(searchPageable) {
+    return this.http.post(this.baseUrl + this.SEARCH, searchPageable);
+  }
 
 
 }
